@@ -1,0 +1,17 @@
+{
+  "name": "maplibre_app_v1",
+  "version": "1.0.0",
+  "size": {
+    "width": 2,
+    "height": 2
+  },
+  "mapping": [
+    {
+      "dataSetId": "fb1387a0-3c0a-410d-99d9-0e216566d7b9",
+      "alias": "auh_gps_view",
+      "fields": []
+    }
+  ],
+  "fileName": "manifest.json",
+  "id": "6ec63dd8-897b-4e09-9af2-828d8fb6a6d9"
+}
