@@ -4,26 +4,34 @@ document.addEventListener("DOMContentLoaded", function () {
     style: {
       "version": 8,
       "sources": {
-        "esriWorldImagery": {
+        "terrainSource": {
           "type": "raster",
-          "tiles": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+          "tiles": [
+            "https://tile.opentopomap.org/{z}/{x}/{y}.png"
+          ],
           "tileSize": 256,
-          "attribution": "Sources: Esri, Maxar, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community"
+          "attribution": "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)"
         }
       },
       "layers": [
         {
-          "id": "esri-world-imagery",
+          "id": "terrain-layer",
           "type": "raster",
-          "source": "esriWorldImagery",
+          "source": "terrainSource",
           "minzoom": 0,
-          "maxzoom": 22
+          "maxzoom": 17
         }
       ]
-    }, // Use ESRI World Imagery
+    }, // Use OpenTopoMap for elevation/terrain
     center: [-119.4179, 36.7783], // Starting position [lng, lat]
-    zoom: 5.5 // Starting zoom level
+    zoom: 5.5, // Starting zoom level
+    attributionControl: true // Enable attribution control
   });
+
+  // Add additional attribution to the map control
+  map.addControl(new maplibregl.AttributionControl({
+    customAttribution: "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)"
+  }));
 
   domo.get('/data/v2/auh_gps_view?limit=100')
     .then(function (auh_gps_view) {
