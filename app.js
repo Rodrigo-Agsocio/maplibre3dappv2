@@ -1,3 +1,4 @@
+//Raster type for whatever reason
 document.addEventListener("DOMContentLoaded", function () {
   const map = new maplibregl.Map({
     container: 'map', // Container ID
