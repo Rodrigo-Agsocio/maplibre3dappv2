@@ -1,51 +1,68 @@
 document.addEventListener("DOMContentLoaded", function () {
   const map = new maplibregl.Map({
-    container: 'map', // container ID
+    container: 'map', // Container ID
     style: {
       "version": 8,
       "sources": {
-        "terrainSource": {
-          "type": "raster-dem", // Use DEM (Digital Elevation Model) for 3D terrain
+        // Add a base map source (Esri World Imagery)
+        "baseMap": {
+          "type": "raster",
           "tiles": [
-            "https://dem.tilehosting.com/{z}/{x}/{y}.png?key=free" // Free DEM tiles
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           ],
-          "tileSize": 256,
-          "attribution": "Map data: © OpenStreetMap contributors, SRTM | Elevation data: © MapTiler (Free Tier)"
+          "tileSize": 512,
+          "attribution": "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+        },
+        // Add a terrain source (Tangram Elevation Tiles)
+        "terrainSource": {
+          "type": "raster-dem",
+          "tiles": [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+          ],
+          "tileSize": 128,
+          "attribution": "Elevation data: © Open-Elevation (Terrarium)"
         }
       },
       "layers": [
+        // Add the base map as the first layer
+        {
+          "id": "base-map-layer",
+          "type": "raster",
+          "source": "baseMap",
+          "minzoom": 5,
+          "maxzoom": 17
+        },
+        // Add a hillshade layer for terrain visualization
         {
           "id": "terrain-layer",
-          "type": "hillshade", // Hillshade for terrain visualization
+          "type": "hillshade",
+          "hillshade-opacity": 0.5,
           "source": "terrainSource",
-          "minzoom": 0,
+          "minzoom": 5,
           "maxzoom": 17
         }
       ]
     },
     center: [-119.4179, 36.7783], // Starting position [lng, lat]
-    zoom: 5.5, // Starting zoom level
-    pitch: 45, // Tilt the map for 3D perspective
-    bearing: 0, // Rotate for better perspective
+    zoom: 7, // Starting zoom level
+    minZoom: 10, // Set minimum zoom out level
+    maxZoom: 15, // Set maximum zoom in level
+    maxBounds: [
+      [-125.0, 32.0], // Southwest corner of California (lon, lat)
+      [-113.0, 42.0]  // Northeast corner of California (lon, lat)
+    ], // Restrict map view to California
+    pitch: 39, // Tilt the map for a 3D perspective
+    bearing: 10, // Rotate for better perspective
     attributionControl: true // Enable attribution control
   });
 
-  // Add terrain to enable real 3D rendering
+  // Enable 3D terrain with reduced exaggeration
   map.on("load", () => {
-    map.setTerrain({ source: "terrainSource", exaggeration: 1.5 }); // Add 3D terrain with optional exaggeration
+    map.setTerrain({ source: "terrainSource", exaggeration: 0.0 }); // Subtle 3D terrain
   });
 
-  // Add additional attribution to the map control
+  // Add custom attribution to the map
   map.addControl(new maplibregl.AttributionControl({
-    customAttribution: "Map data: © OpenStreetMap contributors, SRTM | Elevation data: © MapTiler (Free Tier)"
+    customAttribution: "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community | Elevation data: © Open-Elevation (Terrarium)"
   }));
-
-  domo.get('/data/v2/auh_gps_view?limit=100')
-    .then(function (auh_gps_view) {
-      console.log("auh_gps_view", auh_gps_view);
-      // Add markers or other features based on auh_gps_view data here
-    })
-    .catch(function (error) {
-      console.error("Error fetching data:", error);
-    });
 });
