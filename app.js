@@ -29,17 +29,17 @@ document.addEventListener("DOMContentLoaded", function () {
           "id": "base-map-layer",
           "type": "raster",
           "source": "baseMap",
-          "minzoom": 5,
-          "maxzoom": 17
+          "minzoom": 8, // Set minimum zoom out level
+          "maxzoom": 17 // Set maximum zoom in level
         },
         // Add a hillshade layer for terrain visualization
         {
           "id": "terrain-layer",
           "type": "hillshade",
-          "hillshade-opacity": 0.5,
           "source": "terrainSource",
-          "minzoom": 5,
-          "maxzoom": 17
+          "minzoom": 8, // Set minimum zoom out level
+          "maxzoom": 17, // Set maximum zoom in level
+          "hillshade-opacity": 0.1
         }
       ]
     },
