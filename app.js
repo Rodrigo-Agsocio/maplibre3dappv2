@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       ]
     },
-    center: [-119.4179, 36.7783],
+    center: [-121.645145, 36.681664], //Longitude and Latitude
     zoom: 7,
     minZoom: 10,
     maxZoom: 16,
