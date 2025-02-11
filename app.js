@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
           layout: {
             "text-field": ["get", "CITY_NAME"],
             "text-size": 12,
-            "text-offset": [0, 0.5]
+            "text-offset": [0, 0]
           },
           paint: {
             "text-color": "#000000"
