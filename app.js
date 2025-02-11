@@ -1,68 +1,70 @@
-//Raster type for whatever reason
 document.addEventListener("DOMContentLoaded", function () {
   const map = new maplibregl.Map({
-    container: 'map', // Container ID
+    container: 'map',
     style: {
-      "version": 8,
-      "sources": {
-        // Add a base map source (Esri World Imagery)
-        "baseMap": {
-          "type": "raster",
-          "tiles": [
+      version: 8,
+      sources: {
+        baseMap: {
+          type: "raster",
+          tiles: [
             "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           ],
-          "tileSize": 512,
-          "attribution": "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+          tileSize: 512,
+          attribution: "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community"
         },
-        // Add a terrain source (Tangram Elevation Tiles)
-        "terrainSource": {
-          "type": "raster-dem",
-          "tiles": [
+        terrainSource: {
+          type: "raster-dem",
+          tiles: [
             "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
           ],
-          "tileSize": 128,
-          "attribution": "Elevation data: © Open-Elevation (Terrarium)"
+          tileSize: 128,
+          attribution: "Elevation data: © Open-Elevation (Terrarium)"
         }
       },
-      "layers": [
-        // Add the base map as the first layer
+      layers: [
         {
-          "id": "base-map-layer",
-          "type": "raster",
-          "source": "baseMap",
-          "minzoom": 8, // Set minimum zoom out level
-          "maxzoom": 17 // Set maximum zoom in level
+          id: "base-map-layer",
+          type: "raster",
+          source: "baseMap",
+          minzoom: 8,
+          maxzoom: 17
         },
-        // Add a hillshade layer for terrain visualization
         {
-          "id": "terrain-layer",
-          "type": "hillshade",
-          "source": "terrainSource",
-          "minzoom": 8, // Set minimum zoom out level
-          "maxzoom": 17, // Set maximum zoom in level
-          "hillshade-opacity": 0.1
+          id: "terrain-layer",
+          type: "hillshade",
+          source: "terrainSource",
+          minzoom: 8,
+          maxzoom: 17,
+          // Instead of an unsupported opacity property, set initial colors if desired:
+          "hillshade-shadow-color": "rgba(0, 0, 0, 0.1)",
+          "hillshade-highlight-color": "rgba(255, 255, 255, 0.1)",
+          "hillshade-accent-color": "rgba(0, 0, 0, 0.1)"
         }
       ]
     },
-    center: [-119.4179, 36.7783], // Starting position [lng, lat]
-    zoom: 7, // Starting zoom level
-    minZoom: 10, // Set minimum zoom out level
-    maxZoom: 15, // Set maximum zoom in level
+    center: [-119.4179, 36.7783],
+    zoom: 7,
+    minZoom: 10,
+    maxZoom: 16,
     maxBounds: [
-      [-125.0, 32.0], // Southwest corner of California (lon, lat)
-      [-113.0, 42.0]  // Northeast corner of California (lon, lat)
-    ], // Restrict map view to California
-    pitch: 39, // Tilt the map for a 3D perspective
-    bearing: 10, // Rotate for better perspective
-    attributionControl: true // Enable attribution control
+      [-125.0, 32.0],
+      [-113.0, 42.0]
+    ],
+    pitch: 35,
+    bearing: 18,
+    attributionControl: true
   });
 
-  // Enable 3D terrain with reduced exaggeration
+  // Enable 3D terrain with subtle exaggeration (if needed)
   map.on("load", () => {
-    map.setTerrain({ source: "terrainSource", exaggeration: 0.0 }); // Subtle 3D terrain
+    map.setTerrain({ source: "terrainSource", exaggeration: 0.0 });
+
+    // Dynamically update the hillshade colors to be even more transparent
+    map.setPaintProperty("terrain-layer", "hillshade-shadow-color", "rgba(0, 0, 0, 0.3)");
+    map.setPaintProperty("terrain-layer", "hillshade-highlight-color", "rgba(150, 150, 150, 0.3)");
+    map.setPaintProperty("terrain-layer", "hillshade-accent-color", "rgba(0, 0, 0, 0.5)");
   });
 
-  // Add custom attribution to the map
   map.addControl(new maplibregl.AttributionControl({
     customAttribution: "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community | Elevation data: © Open-Elevation (Terrarium)"
   }));
