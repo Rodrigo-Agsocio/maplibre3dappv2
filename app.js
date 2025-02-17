@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Retrieve the data from Domo.
-  domo.get('/data/v2/auh_gps_view?limit=100')
+  domo.get('/data/v2/auh_gps_view?')
     .then(function (auh_gps_view) {
       console.log("Original Domo Data:", auh_gps_view);
 
@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
               type: "circle",
               source: "domoPoints",
               paint: {
-                "circle-radius": 5,
+                "circle-radius": 2,
                 "circle-color": "#FF0000"
               }
             }
