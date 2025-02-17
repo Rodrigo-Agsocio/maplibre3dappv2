@@ -173,14 +173,32 @@ document.addEventListener("DOMContentLoaded", function () {
         map.setPaintProperty("terrain-layer", "hillshade-highlight-color", "rgba(150, 150, 150, 0.3)");
         map.setPaintProperty("terrain-layer", "hillshade-accent-color", "rgba(0, 0, 0, 0.5)");
 
-        // ADD THIS: Click event to show a popup with "Name" property
+        // ADD THIS: Click event to show a popup with multiple elements
         map.on("click", "domo-points", (e) => {
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const name = e.features[0].properties.Crew || "Unknown Location";
+          const properties = e.features[0].properties;
 
+          // Extract fields with fallback values
+          const name = properties.Name || "No Name";
+          const crew = properties.Crew || "No Crew";
+          const job = properties.Job || "No Job Assigned";
+          const dateTime = properties["Date Time"] || "No Date Available";
+
+          // Create an HTML structure for the popup
+          const popupContent =
+            `
+              <div style="font-size: 7px; padding: 5px; line-height: 1.2;">
+                <strong>Name:</strong> ${name} <br>
+                <strong>Crew:</strong> ${crew} <br>
+                <strong>Job:</strong> ${job} <br>
+                <strong>Date:</strong> ${dateTime}
+              </div>
+            `
+            ;
+
+          // Display the popup with multiple fields
           new maplibregl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(`<strong>${name}</strong>`)
+            .setLngLat(e.features[0].geometry.coordinates)
+            .setHTML(popupContent)
             .addTo(map);
         });
 
