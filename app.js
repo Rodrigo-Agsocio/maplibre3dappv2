@@ -51,14 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
               tileSize: 128,
               attribution: "Elevation data: © Open-Elevation (Terrarium)"
             },
-            terrainDEM: {
-              type: "raster-dem",
-              tiles: [
-                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
-              ],
-              tileSize: 128,
-              attribution: "Elevation data: © Open-Elevation (Terrarium)"
-            },
             counties: {
               type: "geojson",
               data: "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/california-counties.geojson"
@@ -85,10 +77,6 @@ document.addEventListener("DOMContentLoaded", function () {
                   }
                 ]
               }
-            },
-            domoPoints: {
-              type: "geojson",
-              data: domoGeoJSON
             }
           },
           layers: [
@@ -105,9 +93,11 @@ document.addEventListener("DOMContentLoaded", function () {
               source: "terrainSource",
               minzoom: 1,
               maxzoom: 20,
-              "hillshade-shadow-color": "rgba(0, 0, 0, 0.1)",
-              "hillshade-highlight-color": "rgba(255, 255, 255, 0.1)",
-              "hillshade-accent-color": "rgba(0, 0, 0, 0.1)"
+              paint: {
+                "hillshade-shadow-color": "rgba(0, 0, 0, 0.3)",
+                "hillshade-highlight-color": "rgba(255, 255, 255, 0.3)",
+                "hillshade-accent-color": "rgba(200, 200, 200, 0.3)"
+              }
             },
             {
               id: "county-boundaries",
@@ -146,15 +136,6 @@ document.addEventListener("DOMContentLoaded", function () {
               paint: {
                 "text-color": "#000000"
               }
-            },
-            {
-              id: "domo-points",
-              type: "circle",
-              source: "domoPoints",
-              paint: {
-                "circle-radius": 4.1,
-                "circle-color": "#FF0000"
-              }
             }
           ]
         },
@@ -168,14 +149,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       map.on("load", () => {
-        map.setTerrain({ source: "terrainDEM", exaggeration: 0.0 });
-        map.setPaintProperty("terrain-layer", "hillshade-shadow-color", "rgba(0, 0, 0, 0.3)");
-        map.setPaintProperty("terrain-layer", "hillshade-highlight-color", "rgba(150, 150, 150, 0.3)");
-        map.setPaintProperty("terrain-layer", "hillshade-accent-color", "rgba(0, 0, 0, 0.5)");
+        map.setTerrain({ source: "terrainSource", exaggeration: 0.02 });
 
-        // ADD THIS: Click event to show a popup with multiple elements
-        map.on("click", "domo-points", (e) => {
-          const properties = e.features[0].properties;
+        // Add Markers Instead of Dots
+        domoGeoJSON.features.forEach(feature => {
+          const { coordinates } = feature.geometry;
+          const properties = feature.properties;
 
           // Extract fields with fallback values
           const name = properties.Name || "No Name";
@@ -183,26 +162,30 @@ document.addEventListener("DOMContentLoaded", function () {
           const job = properties.Job || "No Job Assigned";
           const dateTime = properties["Date Time"] || "No Date Available";
 
-          // Create an HTML structure for the popup
-          const popupContent =
-            `
-              <div style="font-size: 7px; padding: 5px; line-height: 1.2;">
-                <strong>Name:</strong> ${name} <br>
-                <strong>Crew:</strong> ${crew} <br>
-                <strong>Job:</strong> ${job} <br>
-                <strong>Date:</strong> ${dateTime}
-              </div>
-            `
-            ;
+          // Custom Marker Icon
+          const markerElement = document.createElement("div");
+          markerElement.className = "custom-marker";
+          markerElement.style.backgroundImage = "url('https://upload.wikimedia.org/wikipedia/commons/e/ed/Map_pin_icon.svg')";
+          markerElement.style.width = "20px";
+          markerElement.style.height = "30px";
+          markerElement.style.backgroundSize = "cover";
 
-          // Display the popup with multiple fields
-          new maplibregl.Popup()
-            .setLngLat(e.features[0].geometry.coordinates)
-            .setHTML(popupContent)
+          new maplibregl.Marker(markerElement)
+            .setLngLat(coordinates)
+            .setPopup(
+              new maplibregl.Popup().setHTML(`
+                <div style="font-size: 10px; padding: 5px; line-height: 1.2;">
+                  <strong>Name:</strong> ${name} <br>
+                  <strong>Crew:</strong> ${crew} <br>
+                  <strong>Job:</strong> ${job} <br>
+                  <strong>Date:</strong> ${dateTime}
+                </div>
+              `)
+            )
             .addTo(map);
         });
 
-        // Change cursor to pointer when hovering over points
+        // Change cursor to pointer when hovering over markers
         map.on("mouseenter", "domo-points", () => {
           map.getCanvas().style.cursor = "pointer";
         });
