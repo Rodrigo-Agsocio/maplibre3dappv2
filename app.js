@@ -51,8 +51,17 @@ document.addEventListener("DOMContentLoaded", function () {
               tiles: [
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               ],
-              tileSize: 512,
+              tileSize: 128,
               attribution: "Map data: © Esri, Maxar, Earthstar Geographics"
+            },
+            // Elevation data source
+            terrainSource: {
+              type: "raster-dem",
+              tiles: [
+                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+              ],
+              tileSize: 256,
+              attribution: "Elevation data: © Open-Elevation (Terrarium)"
             },
             counties: {
               type: "geojson",
@@ -79,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
               type: "line",
               source: "counties",
               layout: {},
-              paint: { "line-color": "#65764C", "line-width": 3 }
+              paint: { "line-color": "#65764C", "line-width": 2 }
             },
             {
               id: "county-labels",
@@ -128,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
         zoom: 5,
         minZoom: 1,
         maxZoom: 17,
-        pitch: 9,
+        pitch: 21,
         bearing: 0,
         attributionControl: true
       });
@@ -136,6 +145,9 @@ document.addEventListener("DOMContentLoaded", function () {
       let dropPinPopup = null; // Store popup reference
 
       map.on("load", () => {
+        // Set terrain with an exaggeration factor
+        map.setTerrain({ source: "terrainSource", exaggeration: 0.145 });
+
         // Event for showing popups when clicking on markers
         map.on("click", "domo-markers", (e) => {
           const properties = e.features[0].properties;
@@ -157,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Add a draggable pin to drop anywhere on the map
         const dropPin = new maplibregl.Marker({ draggable: true, color: "red" })
-          .setLngLat([-119.645145, 30.681664])
+          .setLngLat([-115.74310396002714, 33.197989681057905]) // Initial position of drop pin
           .addTo(map);
 
         function onDragEnd() {
@@ -179,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       map.addControl(new maplibregl.AttributionControl({
-        customAttribution: "Map data: © Esri, Maxar, Earthstar Geographics"
+        customAttribution: "Map data: © Esri, Maxar, Earthstar Geographics | Elevation data: © Open-Elevation (Terrarium)"
       }));
     })
     .catch(function (error) {
