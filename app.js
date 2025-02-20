@@ -133,6 +133,8 @@ document.addEventListener("DOMContentLoaded", function () {
         attributionControl: true
       });
 
+      let dropPinPopup = null; // Store popup reference
+
       map.on("load", () => {
         // Event for showing popups when clicking on markers
         map.on("click", "domo-markers", (e) => {
@@ -160,7 +162,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function onDragEnd() {
           const lngLat = dropPin.getLngLat();
-          new maplibregl.Popup()
+
+          // Close any existing popup before creating a new one
+          if (dropPinPopup) {
+            dropPinPopup.remove();
+          }
+
+          // Create a new popup and store the reference
+          dropPinPopup = new maplibregl.Popup()
             .setLngLat(lngLat)
             .setHTML(`<strong>Dropped Pin</strong><br>Longitude: ${lngLat.lng}<br>Latitude: ${lngLat.lat}`)
             .addTo(map);
