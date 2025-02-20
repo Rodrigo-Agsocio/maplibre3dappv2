@@ -17,10 +17,9 @@ document.addEventListener("DOMContentLoaded", function () {
         features: validData.map(row => {
           const coordsStr = row["GPS Coordinate"].replace(/[()]/g, "");
           const parts = coordsStr.split(",").map(s => parseFloat(s.trim()));
-          const coordinates = [parts[1], parts[0]];
           return {
             type: "Feature",
-            geometry: { type: "Point", coordinates: coordinates },
+            geometry: { type: "Point", coordinates: [parts[1], parts[0]] },
             properties: row
           };
         })
@@ -28,7 +27,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
       console.log("Generated GeoJSON:", domoGeoJSON);
 
-      // Initialize the map with the Domo GeoJSON as one of the sources.
+      // Add a known location for verification (Empire State Building)
+      const validationGeoJSON = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [-73.985428, 40.748817] },
+            properties: { name: "Validation Point: Empire State" }
+          }
+        ]
+      };
+
+      // Initialize the map
       const map = new maplibregl.Map({
         container: 'map',
         style: {
@@ -41,15 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               ],
               tileSize: 512,
-              attribution: "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-            },
-            terrainSource: {
-              type: "raster-dem",
-              tiles: [
-                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
-              ],
-              tileSize: 128,
-              attribution: "Elevation data: © Open-Elevation (Terrarium)"
+              attribution: "Map data: © Esri, Maxar, Earthstar Geographics"
             },
             counties: {
               type: "geojson",
@@ -60,54 +63,23 @@ document.addEventListener("DOMContentLoaded", function () {
               data: {
                 type: "FeatureCollection",
                 features: [
-                  {
-                    type: "Feature",
-                    properties: { "CITY_NAME": "Los Angeles" },
-                    geometry: { type: "Point", coordinates: [-118.2437, 34.0522] }
-                  },
-                  {
-                    type: "Feature",
-                    properties: { "CITY_NAME": "San Francisco" },
-                    geometry: { type: "Point", coordinates: [-122.4194, 37.7749] }
-                  },
-                  {
-                    type: "Feature",
-                    properties: { "CITY_NAME": "San Diego" },
-                    geometry: { type: "Point", coordinates: [-117.1611, 32.7157] }
-                  }
+                  { type: "Feature", properties: { "CITY_NAME": "Los Angeles" }, geometry: { type: "Point", coordinates: [-118.2437, 34.0522] } },
+                  { type: "Feature", properties: { "CITY_NAME": "San Francisco" }, geometry: { type: "Point", coordinates: [-122.4194, 37.7749] } },
+                  { type: "Feature", properties: { "CITY_NAME": "San Diego" }, geometry: { type: "Point", coordinates: [-117.1611, 32.7157] } }
                 ]
               }
-            }
+            },
+            domoPoints: { type: "geojson", data: domoGeoJSON },
+            validationPoint: { type: "geojson", data: validationGeoJSON }
           },
           layers: [
-            {
-              id: "base-map-layer",
-              type: "raster",
-              source: "baseMap",
-              minzoom: 1,
-              maxzoom: 20
-            },
-            {
-              id: "terrain-layer",
-              type: "hillshade",
-              source: "terrainSource",
-              minzoom: 1,
-              maxzoom: 20,
-              paint: {
-                "hillshade-shadow-color": "rgba(0, 0, 0, 0.3)",
-                "hillshade-highlight-color": "rgba(255, 255, 255, 0.3)",
-                "hillshade-accent-color": "rgba(200, 200, 200, 0.3)"
-              }
-            },
+            { id: "base-map-layer", type: "raster", source: "baseMap", minzoom: 1, maxzoom: 20 },
             {
               id: "county-boundaries",
               type: "line",
               source: "counties",
               layout: {},
-              paint: {
-                "line-color": "#65764C",
-                "line-width": 3
-              }
+              paint: { "line-color": "#65764C", "line-width": 3 }
             },
             {
               id: "county-labels",
@@ -120,82 +92,85 @@ document.addEventListener("DOMContentLoaded", function () {
                 "text-size": 9,
                 "text-offset": [0, 0]
               },
-              paint: {
-                "text-color": "#FFFFFF"
-              }
+              paint: { "text-color": "#FFFFFF" }
             },
             {
               id: "city-labels",
               type: "symbol",
               source: "cities",
-              layout: {
-                "text-field": ["get", "CITY_NAME"],
-                "text-size": 12,
-                "text-offset": [0, 0]
-              },
-              paint: {
-                "text-color": "#000000"
-              }
+              layout: { "text-field": ["get", "CITY_NAME"], "text-size": 12, "text-offset": [0, 0] },
+              paint: { "text-color": "#000000" }
+            },
+            // "Shadow" layer for markers
+            {
+              id: "domo-markers-shadow",
+              type: "circle",
+              source: "domoPoints",
+              paint: { "circle-radius": 9, "circle-color": "rgba(0, 0, 0, 0.5)", "circle-blur": 2.5, "circle-translate": [-3, 6] }
+            },
+            // ✅ Main markers with white center & thick blue border
+            {
+              id: "domo-markers",
+              type: "circle",
+              source: "domoPoints",
+              paint: { "circle-radius": 3, "circle-color": "#FFFFFF", "circle-stroke-width": 5, "circle-stroke-color": "#65764C" }
+            },
+            // ✅ Bright purple validation marker
+            {
+              id: "validation-marker",
+              type: "circle",
+              source: "validationPoint",
+              paint: { "circle-radius": 6, "circle-color": "#FF00FF", "circle-stroke-width": 3, "circle-stroke-color": "#FFFFFF" }
             }
           ]
         },
-        center: [-121.645145, 36.681664],
-        zoom: 7,
+        center: [-119.645145, 30.681664],
+        zoom: 5,
         minZoom: 1,
         maxZoom: 17,
-        pitch: 35,
-        bearing: 18,
+        pitch: 9,
+        bearing: 0,
         attributionControl: true
       });
 
       map.on("load", () => {
-        map.setTerrain({ source: "terrainSource", exaggeration: 0.02 });
+        // Event for showing popups when clicking on markers
+        map.on("click", "domo-markers", (e) => {
+          const properties = e.features[0].properties;
+          const popupContent = `
+            <div style="font-size: 10px; padding: 5px;">
+              <strong>Name:</strong> ${properties.Name || "No Name"} <br>
+              <strong>Crew:</strong> ${properties.Crew || "No Crew"} <br>
+              <strong>Job:</strong> ${properties.Job || "No Job Assigned"} <br>
+              <strong>Date:</strong> ${properties["Date Time"] || "No Date Available"}
+            </div>
+          `;
 
-        // Add Markers Instead of Dots
-        domoGeoJSON.features.forEach(feature => {
-          const { coordinates } = feature.geometry;
-          const properties = feature.properties;
+          new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setHTML(popupContent).addTo(map);
+        });
 
-          // Extract fields with fallback values
-          const name = properties.Name || "No Name";
-          const crew = properties.Crew || "No Crew";
-          const job = properties.Job || "No Job Assigned";
-          const dateTime = properties["Date Time"] || "No Date Available";
+        // Change cursor to pointer when hovering over points
+        map.on("mouseenter", "domo-markers", () => map.getCanvas().style.cursor = "pointer");
+        map.on("mouseleave", "domo-markers", () => map.getCanvas().style.cursor = "");
 
-          // Custom Marker Icon
-          const markerElement = document.createElement("div");
-          markerElement.className = "custom-marker";
-          markerElement.style.backgroundImage = "url('https://upload.wikimedia.org/wikipedia/commons/e/ed/Map_pin_icon.svg')";
-          markerElement.style.width = "20px";
-          markerElement.style.height = "30px";
-          markerElement.style.backgroundSize = "cover";
+        // Add a draggable pin to drop anywhere on the map
+        const dropPin = new maplibregl.Marker({ draggable: true, color: "red" })
+          .setLngLat([-119.645145, 30.681664])
+          .addTo(map);
 
-          new maplibregl.Marker(markerElement)
-            .setLngLat(coordinates)
-            .setPopup(
-              new maplibregl.Popup().setHTML(`
-                <div style="font-size: 10px; padding: 5px; line-height: 1.2;">
-                  <strong>Name:</strong> ${name} <br>
-                  <strong>Crew:</strong> ${crew} <br>
-                  <strong>Job:</strong> ${job} <br>
-                  <strong>Date:</strong> ${dateTime}
-                </div>
-              `)
-            )
+        function onDragEnd() {
+          const lngLat = dropPin.getLngLat();
+          new maplibregl.Popup()
+            .setLngLat(lngLat)
+            .setHTML(`<strong>Dropped Pin</strong><br>Longitude: ${lngLat.lng}<br>Latitude: ${lngLat.lat}`)
             .addTo(map);
-        });
+        }
 
-        // Change cursor to pointer when hovering over markers
-        map.on("mouseenter", "domo-points", () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-        map.on("mouseleave", "domo-points", () => {
-          map.getCanvas().style.cursor = "";
-        });
+        dropPin.on('dragend', onDragEnd);
       });
 
       map.addControl(new maplibregl.AttributionControl({
-        customAttribution: "Map data: © Esri, Maxar, Earthstar Geographics, and the GIS User Community | Elevation data: © Open-Elevation (Terrarium)"
+        customAttribution: "Map data: © Esri, Maxar, Earthstar Geographics"
       }));
     })
     .catch(function (error) {
