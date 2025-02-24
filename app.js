@@ -130,9 +130,9 @@ document.addEventListener("DOMContentLoaded", function () {
           type: "circle",
           source: "domoPoints",
           paint: {
-            "circle-radius": 3,
+            "circle-radius": 5,
             "circle-color": "#FFFFFF",
-            "circle-stroke-width": 3,
+            "circle-stroke-width": 5,
             "circle-stroke-color": "#65764C"
           }
         });
