@@ -1,8 +1,26 @@
-body {
-  margin: 0;
+#corner-image {
+  position: absolute;
+  top: 10px;
+  /* Distance from top */
+  left: 5px;
+  /* Distance from left */
+  width: 33px;
+  /* Adjust size as needed */
+  height: auto;
+  /* Maintain aspect ratio */
+  opacity: 0.9;
+  /* Adjust transparency */
+  z-index: 1000;
+  /* Ensure it's above the map */
+  border-radius: 8px;
+  /* Optional: rounded corners */
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  /* Optional: add shadow */
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  /* Smooth effects */
 }
 
-#map {
-  height: 100vh;
-  /* Set to full viewport height, or adjust as needed */
+#corner-image:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
