@@ -2,8 +2,8 @@
   "name": "maplibre_app_v1",
   "version": "1.0.0",
   "size": {
-    "width": 2,
-    "height": 1
+    "width": 20,
+    "height": 20
   },
   "mapping": [
     {

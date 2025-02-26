@@ -20,6 +20,13 @@
   /* Smooth effects */
 }
 
+#map {
+  width: 460px;
+  /* Set width */
+  height: 460px;
+  /* Set height */
+}
+
 #corner-image:hover {
   opacity: 1;
   transform: scale(1.1);
