@@ -109,6 +109,27 @@ document.addEventListener("DOMContentLoaded", function () {
               source: "cities",
               layout: { "text-field": ["get", "CITY_NAME"], "text-size": 12, "text-offset": [0, 0] },
               paint: { "text-color": "#000000" }
+            },
+            // "Shadow" layer for markers
+            {
+              id: "domo-markers-shadow",
+              type: "circle",
+              source: "domoPoints",
+              paint: { "circle-radius": 9, "circle-color": "rgba(0, 0, 0, 0.5)", "circle-blur": 2.5, "circle-translate": [-3, 6] }
+            },
+            // ✅ Main markers with white center & thick blue border
+            {
+              id: "domo-markers",
+              type: "circle",
+              source: "domoPoints",
+              paint: { "circle-radius": 5, "circle-color": "#FFFFFF", "circle-stroke-width": 5, "circle-stroke-color": "#65764C" }
+            },
+            // ✅ Bright purple validation marker
+            {
+              id: "validation-marker",
+              type: "circle",
+              source: "validationPoint",
+              paint: { "circle-radius": 6, "circle-color": "#FF00FF", "circle-stroke-width": 2, "circle-stroke-color": "#FFFFFF" }
             }
           ]
         },
@@ -121,45 +142,53 @@ document.addEventListener("DOMContentLoaded", function () {
         attributionControl: true
       });
 
+      let dropPinPopup = null; // Store popup reference
+
       map.on("load", () => {
+        // Set terrain with an exaggeration factor
         map.setTerrain({ source: "terrainSource", exaggeration: 0.089 });
 
-        // ✅ Add Domo GPS Markers (Fix Missing Points)
-        map.addLayer({
-          id: "domo-markers",
-          type: "circle",
-          source: "domoPoints",
-          paint: {
-            "circle-radius": 5,
-            "circle-color": "#FFFFFF",
-            "circle-stroke-width": 5,
-            "circle-stroke-color": "#65764C"
-          }
+        // Event for showing popups when clicking on markers
+        map.on("click", "domo-markers", (e) => {
+          const properties = e.features[0].properties;
+          const popupContent = `
+            <div style="font-size: 10px; padding: 5px;">
+              <strong>Date:</strong> ${properties["Date Time"] || "No Date Available"} <br>
+              <strong>GPS Coordinate:</strong> ${properties["GPS Coordinate"] || "No GPS Coordinate"} <br>
+              <strong>Name:</strong> ${properties.Name || "No Name"} <br>
+              <strong>Crew:</strong> ${properties.Crew || "No Crew"} <br>
+              <strong>Job:</strong> ${properties.Job || "No Job Assigned"}
+            </div>
+          `;
+
+          new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setHTML(popupContent).addTo(map);
         });
 
-        // ✅ Add Image to Top Left Corner
-        const mapContainer = document.getElementById("map");
+        // Change cursor to pointer when hovering over points
+        map.on("mouseenter", "domo-markers", () => map.getCanvas().style.cursor = "pointer");
+        map.on("mouseleave", "domo-markers", () => map.getCanvas().style.cursor = "");
 
-        const cornerImage = document.createElement("img");
-        cornerImage.src = "images/agsocio_logo_bottom_corner_icon.jpg"; // ✅ Correct path inside images/
-        cornerImage.id = "corner-image";
-        cornerImage.alt = "AgSocio Logo";
-
-        // Append image to the map container
-        mapContainer.appendChild(cornerImage);
-
-        // ✅ Restore Draggable Pin
+        // Add a draggable pin to drop anywhere on the map
         const dropPin = new maplibregl.Marker({ draggable: true, color: "red" })
-          .setLngLat([-115.74310396002714, 33.197989681057905]) // Initial position
+          .setLngLat([-115.74310396002714, 33.197989681057905]) // Initial position of drop pin
           .addTo(map);
 
-        dropPin.on("dragend", function () {
+        function onDragEnd() {
           const lngLat = dropPin.getLngLat();
-          new maplibregl.Popup()
+
+          // Close any existing popup before creating a new one
+          if (dropPinPopup) {
+            dropPinPopup.remove();
+          }
+
+          // Create a new popup and store the reference
+          dropPinPopup = new maplibregl.Popup()
             .setLngLat(lngLat)
             .setHTML(`<strong>Dropped Pin</strong><br>Longitude: ${lngLat.lng}<br>Latitude: ${lngLat.lat}`)
             .addTo(map);
-        });
+        }
+
+        dropPin.on('dragend', onDragEnd);
       });
 
       map.addControl(new maplibregl.AttributionControl({
