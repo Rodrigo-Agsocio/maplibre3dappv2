@@ -1,16 +1,35 @@
+<!DOCTYPE html>
 <html>
 
 <head>
   <link rel="stylesheet" href="app.css" />
   <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    /* Ensure the map container fills the entire viewport */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Make the map container responsive */
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>maplibre_app_v1</h1>
-  <div id="map" style="width: 100%; height: 400px;"></div> <!-- Map container -->
+  <div id="map"></div> <!-- Map container -->
+  <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
   <script src="https://unpkg.com/maplibre-gl"></script>
-  <script src="domo.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <script src="js/domo.js"></script>
+  <script src="js/loadCounties.js"></script>
+  <script src="js/app.js"></script>
 </body>
 
 </html>

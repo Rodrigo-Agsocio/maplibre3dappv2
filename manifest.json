@@ -1,6 +1,6 @@
 {
-  "name": "maplibre_app_v1",
-  "version": "1.0.0",
+  "name": "maplibre_app_gps_points",
+  "version": "2.0.3",
   "size": {
     "width": 20,
     "height": 20
