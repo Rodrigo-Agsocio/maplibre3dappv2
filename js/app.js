@@ -11,6 +11,24 @@ document.addEventListener("DOMContentLoaded", function () {
     domoIframe.style.height = "100%"; // Make iframe responsive
   }
 
+  // Create a div to display the zoom level
+  const zoomLevelDisplay = document.createElement("div");
+  zoomLevelDisplay.id = "zoom-level-display";
+  zoomLevelDisplay.style.position = "absolute";
+  zoomLevelDisplay.style.top = "10px";
+  zoomLevelDisplay.style.left = "50%";
+  zoomLevelDisplay.style.transform = "translateX(-50%)";
+  zoomLevelDisplay.style.backgroundColor = "rgba(255, 255, 255, 0.8)";
+  zoomLevelDisplay.style.padding = "5px 10px";
+  zoomLevelDisplay.style.borderRadius = "5px";
+  zoomLevelDisplay.style.fontFamily = "Arial, sans-serif";
+  zoomLevelDisplay.style.fontSize = "14px";
+  zoomLevelDisplay.style.zIndex = "1000";
+  zoomLevelDisplay.textContent = "Zoom: 0";
+
+  // Append the zoom level display to the map container
+  mapContainer.appendChild(zoomLevelDisplay);
+
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
       // Enter fullscreen mode
@@ -48,7 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
       fullscreenButton.textContent = "⛶"; // Change button text when exiting fullscreen
     }
   });
-
 
   // Function to detect if the user is on a mobile device
   function isMobileDevice() {
@@ -112,13 +129,17 @@ document.addEventListener("DOMContentLoaded", function () {
       // Initialize the map with MapLibre GL.
       const map = new maplibregl.Map(
         {
+          maxBounds: [
+            [-125, 24], // Southwest coordinates
+            [-66, 50]   // Northeast coordinates
+          ],
           container: 'map', // The HTML element where the map is displayed.
           style: {
-            center: [-114.5819091796875, 33.642062504753696], // Initial center of the map
-            zoom: 6, // Initial zoom level
+            center: [-114.400634765625, 32.89342578969233], // Initial center of the map
+            zoom: 7, // Initial zoom level
             minZoom: 5.9, // Minimum zoom level (how far out you can zoom)
-            maxZoom: 17, // Maximum zoom level (how far in you can zoom)
-            pitch: 25,
+            maxZoom: 10, // Maximum zoom level (how far in you can zoom)
+            pitch: 18,
             bearing: 1,
             attributionControl: true,
             version: 8,
@@ -130,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 tiles: [
                   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                 ],
-                tileSize: 256,
+                tileSize: 512,
                 attribution: "Map data: © Esri, Maxar, Earthstar Geographics"
               },
               // Elevation data source
@@ -139,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 tiles: [
                   "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
                 ],
-                tileSize: 256,
+                tileSize: 512,
                 attribution: "Elevation data: © Open-Elevation (Terrarium)"
               },
               // City labels
@@ -165,8 +186,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 id: "base-map-layer",
                 type: "raster",
                 source: "baseMap",
-                minzoom: 1,
-                maxzoom: 20
+                minZoom: 5, // Minimum zoom level (how far out you can zoom)
+                maxZoom: 10, // Maximum zoom level (how far in you can zoom)
               },
               // City name labels
               {
@@ -176,31 +197,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 layout: { "text-field": ["get", "CITY_NAME"], "text-size": 12, "text-offset": [0, 0] },
                 paint: { "text-color": "#000000" }
               },
-              // Shadow effect for markers
-              {
-                id: "domo-markers-shadow",
-                type: "circle",
-                source: "domoPoints",
-                paint: { "circle-radius": 20, "circle-color": "rgba(0, 0, 0, 0.5)", "circle-blur": 2.5, "circle-translate": [3, -2] }
-              },
               // Main GPS markers
               {
                 id: "domo-markers",
                 type: "circle",
                 source: "domoPoints",
-                paint: { "circle-radius": 5, "circle-color": "#FFFFFF", "circle-stroke-width": 5, "circle-stroke-color": "#65764C" }
+                paint: {
+                  "circle-radius": 8,
+                  "circle-color": "#FFFFFF",
+                  "circle-stroke-width": 5,
+                  "circle-stroke-color": "#65764C"
+                }
               },
-              // Validation marker (purple)
-              {
-                id: "validation-marker",
-                type: "circle",
-                source: "validationPoint",
-                paint: { "circle-radius": 6, "circle-color": "#FF00FF", "circle-stroke-width": 2, "circle-stroke-color": "#FFFFFF" }
-              }
             ]
           }
         }
-      );
+      ); console.log("Map Configuration:", map.getBounds()); // Log the map's bounds
+
+      // Update the zoom level display when the map's zoom changes
+      map.on("zoom", () => {
+        const zoomLevel = map.getZoom().toFixed(2);
+        zoomLevelDisplay.textContent = `Zoom: ${zoomLevel}`;
+      });
 
       let dropPinPopup = null; // Store popup reference
 
@@ -210,28 +228,37 @@ document.addEventListener("DOMContentLoaded", function () {
       cornerImage.id = "corner-image";
       cornerImage.alt = "AgSocio Logo";
 
-      const mapContainer = document.getElementById("map");
-
       map.on("load", () => {
         // Set terrain elevation with a slight exaggeration
-        map.setTerrain({ source: "terrainSource", exaggeration: 0.089 });
+        map.setTerrain({ source: "terrainSource", exaggeration: 0.082 });
 
         // Change cursor to pointer when hovering over points.
         map.on("mouseenter", "domo-markers", () => map.getCanvas().style.cursor = "pointer");
         map.on("mouseleave", "domo-markers", () => map.getCanvas().style.cursor = "");
         // Show popups when clicking on markers
         map.on("click", "domo-markers", (e) => {
+          // Get the coordinates of the clicked marker
+          const coordinates = e.features[0].geometry.coordinates;
           const properties = e.features[0].properties;
           const popupContent = `
-            <div style="font-size: 10px; padding: 5px;">
-              <strong>Date:</strong> ${properties["Date Time"] || "No Date Available"} <br>
+            <div style="font-size: 17px; padding: 5px;">
+              <strong>Date:</strong> ${properties["Date"] || "No Date Available"} <br>
               <strong>GPS Coordinate:</strong> ${properties["GPS Coordinate"] || "No GPS Coordinate"} <br>
               <strong>Name:</strong> ${properties.Name || "No Name"} <br>
               <strong>Crew:</strong> ${properties.Crew || "No Crew"} <br>
               <strong>Job:</strong> ${properties.Job || "No Job Assigned"}
             </div>
           `;
-          new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setHTML(popupContent).addTo(map);
+          // Fly to the marker's location with a zoom level of 12
+          map.flyTo({
+            center: coordinates,
+            zoom: map.getZoom() > 14 ? map.getZoom() : 14, // Adjust the zoom level as needed
+            essential: true // Ensures the animation is not interrupted by user interactions
+          });
+          new maplibregl.Popup({ offset: [0, 0] })
+            .setLngLat(e.features[0].geometry.coordinates)
+            .setHTML(popupContent)
+            .addTo(map);
         });
         // Add a draggable pin
         const dropPin = new maplibregl.Marker({ draggable: true, color: "red" })
@@ -258,8 +285,9 @@ document.addEventListener("DOMContentLoaded", function () {
               source: "counties",
               paint: {
                 "line-color": "#FFFFFF", // White color
-                "line-width": 1.3,
-                "line-dasharray": [2, 2] // Dotted line
+                "line-width": 0.2,
+                "line-dasharray": [2, 2], // Dotted line
+                "line-blur": 0.5 //Smooth the lines
               }
             });
 
@@ -297,7 +325,8 @@ document.addEventListener("DOMContentLoaded", function () {
             source: "us-states",
             paint: {
               "line-color": "#65764C", // Solid line color
-              "line-width": 2
+              "line-width": 2,
+              "line-blur": 0.5 //Smooth the lines
             }
           });
 
@@ -318,49 +347,6 @@ document.addEventListener("DOMContentLoaded", function () {
               "text-halo-width": 1
             }
           });
-
-          // Add a fill layer for states to enable click interaction
-          map.addLayer({
-            id: "us-states-fill",
-            type: "fill",
-            source: "us-states",
-            paint: {
-              "fill-color": "#FFFFFF", // Transparent fill
-              "fill-opacity": 0
-            }
-          });
-
-          // Add click interaction for states
-          map.on("click", "us-states-fill", (e) => {
-            const stateName = e.features[0].properties.name;
-            const stateGeometry = e.features[0].geometry;
-
-            // Calculate the centroid of the state using Turf.js
-            const centroid = turf.center(stateGeometry);
-
-            // Center the map on the state's centroid
-            map.flyTo({
-              center: centroid.geometry.coordinates,
-              zoom: 6 // Adjust the zoom level as needed
-            });
-
-            // Show a popup with the state name
-            new maplibregl.Popup()
-              .setLngLat(centroid.geometry.coordinates)
-              .setHTML(`<strong>${stateName}</strong>`)
-              .addTo(map);
-          });
-
-          // Change cursor to pointer when hovering over states
-          map.on("mouseenter", "us-states-fill", () => {
-            map.getCanvas().style.cursor = "pointer";
-          });
-
-          map.on("mouseleave", "us-states-fill", () => {
-            map.getCanvas().style.cursor = "";
-          }
-
-          );
         }
         ).catch(error => console.error("❌ Error loading US states:", error));
 

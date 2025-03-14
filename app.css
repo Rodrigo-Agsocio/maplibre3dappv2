@@ -12,7 +12,7 @@
   /* Adjust transparency */
   z-index: 1000;
   /* Ensure it's above the map */
-  border-radius: 8px;
+  border-radius: 3px;
   /* Optional: rounded corners */
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
   /* Optional: add shadow */
@@ -21,14 +21,14 @@
 }
 
 #corner-image:hover {
-  opacity: 1;
+  opacity: 0.2;
   transform: scale(1.1);
 }
 
 #fullscreen-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  bottom: 10px;
+  left: 10px;
   /* Position it on the right side */
   z-index: 1000;
   /* Ensure it's above the map */
@@ -44,5 +44,22 @@
 
 #fullscreen-button:hover {
   background-color: rgba(255, 255, 255, 1);
-  transform: scale(1.1);
+  transform: scale(1.5);
+}
+
+.maplibregl-popup-content {
+  font-size: 2.5vw !important;
+  /* Larger font size */
+  padding: 2vw !important;
+  /* Larger padding */
+  max-width: 90vw !important;
+  /* Wider box */
+  width: 435px !important;
+  /* Allow the width to adjust dynamically */
+  background-color: white;
+  /* Ensure background is visible */
+  border-radius: 8px;
+  /* Optional: Add rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Optional: Add shadow for better visibility */
 }
