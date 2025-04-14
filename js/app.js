@@ -242,10 +242,9 @@ document.addEventListener("DOMContentLoaded", function () {
           const properties = e.features[0].properties;
           const popupContent = `
             <div style="font-size: 17px; padding: 5px;">
-              <strong>Date:</strong> ${properties["Date"] || "No Date Available"} <br>
-              <strong>GPS Coordinate:</strong> ${properties["GPS Coordinate"] || "No GPS Coordinate"} <br>
-              <strong>Name:</strong> ${properties.Name || "No Name"} <br>
               <strong>Crew:</strong> ${properties.Crew || "No Crew"} <br>
+              <strong>Field:</strong> ${properties["Ranch Field"] || "No Field Available"} <br>
+              <strong>Date:</strong> ${properties["Date"] || "No Date Available"} <br>
               <strong>Job:</strong> ${properties.Job || "No Job Assigned"}
             </div>
           `;
